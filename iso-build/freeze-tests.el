@@ -253,9 +253,17 @@
   (when (and subdir (file-directory-p subdir))
     (add-to-list 'load-path subdir)))
 
-;; v0.9.8 arm_parent_death freeze-tests live in the subdir; require
-;; with noerror so a stripped image without the subdir still loads.
+;; v0.9.x per-slice freeze-tests live in the subdir; require with
+;; noerror so a stripped image without the subdir still loads.
 (require 'freeze-test-arm-parent-death nil 'noerror)
+(require 'freeze-test-disk-size-bytes nil 'noerror)
+(require 'freeze-test-hurd-disk-size-bytes nil 'noerror)
+(require 'freeze-test-disks-install-hurd nil 'noerror)
+(require 'freeze-test-hurd-kmsg-source nil 'noerror)
+(require 'freeze-test-hurd-dmesg-prime nil 'noerror)
+(require 'freeze-test-port-hurd nil 'noerror)
+(require 'freeze-test-hostname nil 'noerror)
+(require 'freeze-test-cmdline nil 'noerror)
 
 (defvar freeze-test-results nil
   "Alist of (TEST-NAME . RESULT) entries.  RESULT is one of
@@ -4231,9 +4239,25 @@ back via state-read to confirm the persist landed."
   (freeze-test-services-client-render)
   (freeze-test-journal-client-render)
   (freeze-test-port-hurd)
-  ;; v0.9.8 arm_parent_death.  guarded on fboundp so a stripped image
-  ;; (no subdir, the require above no-op'd) records nothing rather
-  ;; than crashing the run.
+  ;; v0.9.x per-slice modules.  guarded on fboundp so a stripped
+  ;; image (no subdir, the require above no-op'd) records nothing
+  ;; rather than crashing the run.
+  (when (fboundp 'freeze-test-hostname)
+    (freeze-test-hostname))
+  (when (fboundp 'freeze-test-cmdline)
+    (freeze-test-cmdline))
+  (when (fboundp 'freeze-test-disk-size-bytes)
+    (freeze-test-disk-size-bytes))
+  (when (fboundp 'freeze-test-hurd-disk-size-bytes)
+    (freeze-test-hurd-disk-size-bytes))
+  (when (fboundp 'freeze-test-disks-install-hurd)
+    (freeze-test-disks-install-hurd))
+  (when (fboundp 'freeze-test-hurd-kmsg-source)
+    (freeze-test-hurd-kmsg-source))
+  (when (fboundp 'freeze-test-hurd-dmesg-prime)
+    (freeze-test-hurd-dmesg-prime))
+  (when (fboundp 'freeze-test-port-hurd-module)
+    (freeze-test-port-hurd-module))
   (when (fboundp 'freeze-test-arm-parent-death)
     (freeze-test-arm-parent-death))
   (freeze-test-kill-emacs)

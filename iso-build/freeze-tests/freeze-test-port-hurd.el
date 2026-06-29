@@ -368,5 +368,15 @@ regression trips before reaching the Hurd VM gate."
     (freeze-test--port-hurd-record 'port-hurd/end-to-end result)
     result))
 
+(defun freeze-test-port-hurd-module ()
+  "Run the C-side port_hurd slice freeze-tests.
+Records four results under port-hurd/* tags; returns nil."
+  (interactive)
+  (freeze-test-port-hurd-publish-auth-port)
+  (freeze-test-port-hurd-auth-drain)
+  (freeze-test-port-hurd-client-handshake)
+  (freeze-test-port-hurd-end-to-end)
+  nil)
+
 (provide 'freeze-test-port-hurd)
 ;;; freeze-test-port-hurd.el ends here
