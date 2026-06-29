@@ -4201,17 +4201,30 @@ back via state-read to confirm the persist landed."
 ;; orchestration
 ;; --------------------------------------------------------------------
 
+(defvar freeze-test-console-p nil
+  "When non-nil, `freeze-test-run-all' skips wedge-class tests 1-2.
+Batch/console Emacs has no timer event loop, so `with-timeout' around
+a tight `(while t)' never fires.  the in-guest interactive run keeps
+this nil.")
+
 (defun freeze-test-run-all ()
   "Run every freeze test in order.  prints a summary at the end."
   (interactive)
   (setq freeze-test-results nil)
-  (message "freeze-test: starting abuse suite")
-  (freeze-test-runaway-loop)
-  (unless (freeze-test--alive-p)
-    (error "freeze-test: emacs unresponsive after runaway-loop"))
-  (freeze-test-catastrophic-regex)
-  (unless (freeze-test--alive-p)
-    (error "freeze-test: emacs unresponsive after catastrophic-regex"))
+  (message "freeze-test: starting abuse suite%s"
+           (if freeze-test-console-p " (console, skipping wedge 1-2)" ""))
+  (if freeze-test-console-p
+      (progn
+        (freeze-test--record 'runaway-loop
+                             '(skip . "console batch has no timer loop"))
+        (freeze-test--record 'catastrophic-regex
+                             '(skip . "console batch has no timer loop")))
+    (freeze-test-runaway-loop)
+    (unless (freeze-test--alive-p)
+      (error "freeze-test: emacs unresponsive after runaway-loop"))
+    (freeze-test-catastrophic-regex)
+    (unless (freeze-test--alive-p)
+      (error "freeze-test: emacs unresponsive after catastrophic-regex")))
   (freeze-test-slow-network)
   (freeze-test-bad-tramp)
   (freeze-test-state-roundtrip)
@@ -4260,7 +4273,10 @@ back via state-read to confirm the persist landed."
     (freeze-test-port-hurd-module))
   (when (fboundp 'freeze-test-arm-parent-death)
     (freeze-test-arm-parent-death))
-  (freeze-test-kill-emacs)
+  (if freeze-test-console-p
+      (freeze-test--record 'kill-emacs
+                           '(skip . "noninteractive batch allows kill-emacs"))
+    (freeze-test-kill-emacs))
   (freeze-test-report))
 
 (defun freeze-test--result-is-skip-p (r)
